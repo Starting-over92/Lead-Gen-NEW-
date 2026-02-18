@@ -26,20 +26,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $formData = $validation['values'];
 
         if (empty($errors)) {
-            $stmt = $pdo->prepare('INSERT INTO campaigns (niche, country, city, company_size, job_titles, outreach_tone, daily_limit, status) VALUES (:niche, :country, :city, :company_size, :job_titles, :outreach_tone, :daily_limit, :status)');
-            $stmt->execute([
-                ':niche' => $formData['niche'],
-                ':country' => $formData['country'],
-                ':city' => $formData['city'] !== '' ? $formData['city'] : null,
-                ':company_size' => $formData['company_size'],
-                ':job_titles' => json_encode($formData['job_titles'], JSON_UNESCAPED_UNICODE),
-                ':outreach_tone' => $formData['outreach_tone'],
-                ':daily_limit' => $formData['daily_limit'],
-                ':status' => 'active',
-            ]);
-
-            header('Location: /ai-leadgen/campaigns/index.php?success=created');
-            exit;
+            try {
+                $createdId = createCampaign($pdo, $formData);
+                header('Location: /ai-leadgen/campaigns/view.php?id=' . $createdId . '&success=created');
+                exit;
+            } catch (Throwable $exception) {
+                $errors['general'] = 'Unable to save campaign right now. Please try again.';
+            }
         }
     }
 }
@@ -51,6 +44,7 @@ renderHeader('Create Campaign', 'campaigns');
 </section>
 
 <?php if (!empty($errors['csrf'])): ?><div class="alert alert-error"><?= e($errors['csrf']) ?></div><?php endif; ?>
+<?php if (!empty($errors['general'])): ?><div class="alert alert-error"><?= e($errors['general']) ?></div><?php endif; ?>
 
 <?php
 $submitLabel = 'Create Campaign';

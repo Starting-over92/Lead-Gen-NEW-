@@ -111,3 +111,50 @@ function toneDescription(string $tone): string
 
     return $map[$tone] ?? '';
 }
+
+/**
+ * Persist a new campaign as an append-only INSERT and return its new ID.
+ *
+ * @throws Throwable
+ */
+function createCampaign(PDO $pdo, array $values): int
+{
+    $pdo->beginTransaction();
+
+    try {
+        $stmt = $pdo->prepare('INSERT INTO campaigns (niche, country, city, company_size, job_titles, outreach_tone, daily_limit, status) VALUES (:niche, :country, :city, :company_size, :job_titles, :outreach_tone, :daily_limit, :status)');
+        $stmt->execute([
+            ':niche' => $values['niche'],
+            ':country' => $values['country'],
+            ':city' => $values['city'] !== '' ? $values['city'] : null,
+            ':company_size' => $values['company_size'],
+            ':job_titles' => json_encode($values['job_titles'], JSON_UNESCAPED_UNICODE),
+            ':outreach_tone' => $values['outreach_tone'],
+            ':daily_limit' => $values['daily_limit'],
+            ':status' => 'active',
+        ]);
+
+        $id = (int)$pdo->lastInsertId();
+
+        if ($id < 1) {
+            throw new RuntimeException('Campaign insert failed to return a valid ID.');
+        }
+
+        $verifyStmt = $pdo->prepare('SELECT id FROM campaigns WHERE id = :id LIMIT 1');
+        $verifyStmt->execute([':id' => $id]);
+
+        if (!$verifyStmt->fetchColumn()) {
+            throw new RuntimeException('Campaign could not be verified after insert.');
+        }
+
+        $pdo->commit();
+
+        return $id;
+    } catch (Throwable $exception) {
+        if ($pdo->inTransaction()) {
+            $pdo->rollBack();
+        }
+
+        throw $exception;
+    }
+}

@@ -32,6 +32,8 @@ renderHeader('Campaign Details', 'campaigns');
 
 <?php if (isset($_GET['success']) && $_GET['success'] === 'updated'): ?>
     <div class="alert alert-success">Campaign updated successfully.</div>
+<?php elseif (isset($_GET['success']) && $_GET['success'] === 'created'): ?>
+    <div class="alert alert-success">Campaign created successfully and saved.</div>
 <?php endif; ?>
 
 <div class="grid-2">
