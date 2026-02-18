@@ -74,14 +74,15 @@ If you see `Database connection failed...`:
 
 1. Confirm DB name/user are prefixed exactly as in Hostinger.
 2. Confirm DB user has **ALL privileges** on that DB.
-3. Confirm DB host is `localhost` (unless Hostinger shows another host).
+3. Confirm DB host is exactly what Hostinger shows (`localhost` in most cases).
 4. Confirm the SQL was imported into the same DB configured in `db.php`.
-5. Temporarily enable debug mode in environment:
+5. Try removing custom port overrides and keep `3306` unless Hostinger gave you another port.
+6. If you used `127.0.0.1`, switch to `localhost` and test again.
+7. Open `/ai-leadgen/health.php` after fixing credentials.
+8. If still failing, enable temporary debug output with environment variable:
    - `APP_DEBUG=1`
-   - Refresh once, read exact PDO error, then disable debug mode.
-6. Run a quick health check URL:
-   - `https://yourdomain.com/ai-leadgen/health.php`
-   - It should show DB connected and required tables status.
+   - refresh once to view exact PDO reason
+   - disable `APP_DEBUG` immediately after troubleshooting
 
 ## 6) Core module features included
 
