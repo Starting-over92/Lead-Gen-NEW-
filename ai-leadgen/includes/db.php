@@ -8,15 +8,35 @@ declare(strict_types=1);
  * 1) Environment variables (recommended for production)
  * 2) Fallback defaults below
  */
-$host = getenv('DB_HOST') ?: 'localhost';
-$dbName = getenv('DB_NAME') ?: 'u419638158_Pooky';
-$username = getenv('DB_USER') ?: 'u419638158_Pooky01';
-$password = getenv('DB_PASS') ?: 'Primaldevs01@@';
+$envHost = getenv('DB_HOST');
+$envName = getenv('DB_NAME');
+$envUser = getenv('DB_USER');
+$envPass = getenv('DB_PASS');
+
+$hasCompleteEnvConfig = $envHost !== false && $envHost !== ''
+    && $envName !== false && $envName !== ''
+    && $envUser !== false && $envUser !== ''
+    && $envPass !== false;
+
+if ($hasCompleteEnvConfig) {
+    $host = $envHost;
+    $dbName = $envName;
+    $username = $envUser;
+    $password = $envPass;
+} else {
+    // Hostinger fallback values (used only when a full DB_* env config is not provided).
+    $host = 'localhost';
+    $dbName = 'u419638158_Pooky';
+    $username = 'u419638158_Pooky01';
+    $password = 'Primaldevs01@@';
+}
+
 $port = (int)(getenv('DB_PORT') ?: 3306);
 $charset = 'utf8mb4';
 
 // Set APP_DEBUG=1 only temporarily when troubleshooting.
 $debugMode = (getenv('APP_DEBUG') === '1');
+$dbConfigSource = $hasCompleteEnvConfig ? 'environment variables' : 'fallback defaults';
 
 /**
  * Try connection with multiple DSN variants.
@@ -71,6 +91,7 @@ if (!$pdo) {
         echo '<h3>Database connection failed</h3>';
         echo '<p><strong>Hint:</strong> ' . htmlspecialchars($hint, ENT_QUOTES, 'UTF-8') . '</p>';
         echo '<p><strong>Error:</strong> ' . htmlspecialchars($message, ENT_QUOTES, 'UTF-8') . '</p>';
+        echo '<p><strong>DB config source:</strong> ' . htmlspecialchars($dbConfigSource, ENT_QUOTES, 'UTF-8') . '</p>';
         echo '<p><strong>Tried user:</strong> ' . htmlspecialchars($username, ENT_QUOTES, 'UTF-8') . '</p>';
         echo '<p><strong>Tried DSN(s):</strong> ' . htmlspecialchars(implode(' | ', $dsnCandidates), ENT_QUOTES, 'UTF-8') . '</p>';
         echo '<hr>';

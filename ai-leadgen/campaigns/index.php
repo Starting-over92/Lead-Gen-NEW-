@@ -13,7 +13,8 @@ if (!in_array($statusFilter, $allowedStatus, true)) {
 }
 
 $page = max(1, (int)($_GET['page'] ?? 1));
-$perPage = 10;
+$showAll = (($_GET['view'] ?? '') === 'all');
+$perPage = $showAll ? 1000 : 10;
 $offset = ($page - 1) * $perPage;
 
 $where = [];
@@ -25,8 +26,8 @@ if ($search !== '') {
 }
 
 if ($statusFilter !== '') {
-    $where[] = 'status = :status';
-    $params[':status'] = $statusFilter;
+    $where[] = 'LOWER(TRIM(status)) = :status';
+    $params[':status'] = strtolower($statusFilter);
 }
 
 $whereSql = $where ? 'WHERE ' . implode(' AND ', $where) : '';
@@ -41,14 +42,15 @@ if ($page > $totalPages) {
     $offset = ($page - 1) * $perPage;
 }
 
-$listSql = "SELECT * FROM campaigns {$whereSql} ORDER BY created_at DESC LIMIT :limit OFFSET :offset";
-$listStmt = $pdo->prepare($listSql);
-foreach ($params as $key => $value) {
-    $listStmt->bindValue($key, $value);
+if ($showAll) {
+    $listSql = "SELECT * FROM campaigns {$whereSql} ORDER BY created_at DESC";
+    $listStmt = $pdo->prepare($listSql);
+    $listStmt->execute($params);
+} else {
+    $listSql = sprintf('SELECT * FROM campaigns %s ORDER BY created_at DESC LIMIT %d OFFSET %d', $whereSql, $perPage, $offset);
+    $listStmt = $pdo->prepare($listSql);
+    $listStmt->execute($params);
 }
-$listStmt->bindValue(':limit', $perPage, PDO::PARAM_INT);
-$listStmt->bindValue(':offset', $offset, PDO::PARAM_INT);
-$listStmt->execute();
 $campaigns = $listStmt->fetchAll();
 
 renderHeader('Campaigns', 'campaigns');
@@ -68,6 +70,7 @@ renderHeader('Campaigns', 'campaigns');
 
 <div class="card">
     <form method="get" class="filters">
+        <?php if ($showAll): ?><input type="hidden" name="view" value="all"><?php endif; ?>
         <input type="text" name="search" placeholder="Search by niche or city" value="<?= e($search) ?>">
         <select name="status">
             <option value="">All statuses</option>
@@ -115,7 +118,8 @@ renderHeader('Campaigns', 'campaigns');
                         </td>
                         <td><?= e((string)$campaign['outreach_tone']) ?></td>
                         <td><?= e((string)$campaign['daily_limit']) ?></td>
-                        <td><span class="status <?= e((string)$campaign['status']) ?>"><?= e(ucfirst((string)$campaign['status'])) ?></span></td>
+                        <?php $normalizedStatus = strtolower(trim((string)$campaign['status'])); ?>
+                        <td><span class="status <?= e($normalizedStatus) ?>"><?= e(ucfirst($normalizedStatus)) ?></span></td>
                         <td><?= e((string)$campaign['created_at']) ?></td>
                         <td>
                             <div class="actions">
@@ -126,7 +130,7 @@ renderHeader('Campaigns', 'campaigns');
                                     <?= csrfField(); ?>
                                     <input type="hidden" name="id" value="<?= (int)$campaign['id'] ?>">
                                     <button type="submit" class="btn btn-mini">
-                                        <?= $campaign['status'] === 'active' ? 'Pause' : 'Activate' ?>
+                                        <?= strtolower(trim((string)$campaign['status'])) === 'active' ? 'Pause' : 'Activate' ?>
                                     </button>
                                 </form>
                             </div>
@@ -138,12 +142,14 @@ renderHeader('Campaigns', 'campaigns');
         </table>
     </div>
 
-    <div class="pagination">
-        <?php for ($i = 1; $i <= $totalPages; $i++): ?>
-            <a class="page-link <?= $i === $page ? 'active' : '' ?>" href="?<?= http_build_query(['search' => $search, 'status' => $statusFilter, 'page' => $i]) ?>">
-                <?= $i ?>
-            </a>
-        <?php endfor; ?>
-    </div>
+    <?php if (!$showAll): ?>
+        <div class="pagination">
+            <?php for ($i = 1; $i <= $totalPages; $i++): ?>
+                <a class="page-link <?= $i === $page ? 'active' : '' ?>" href="?<?= http_build_query(['search' => $search, 'status' => $statusFilter, 'page' => $i]) ?>">
+                    <?= $i ?>
+                </a>
+            <?php endfor; ?>
+        </div>
+    <?php endif; ?>
 </div>
 <?php renderFooter(); ?>
