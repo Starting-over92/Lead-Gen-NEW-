@@ -20,15 +20,15 @@ renderHeader('Dashboard', 'dashboard');
 </section>
 
 <div class="stat-grid">
-    <a class="card stat-card stat-link" href="/ai-leadgen/campaigns/index.php">
+    <a class="card stat-card stat-link" href="/ai-leadgen/campaigns/index.php?view=all">
         <h3>Total Campaigns</h3>
         <p><?= $totals['all'] ?></p>
     </a>
-    <a class="card stat-card stat-link" href="/ai-leadgen/campaigns/index.php?status=active">
+    <a class="card stat-card stat-link" href="/ai-leadgen/campaigns/index.php?status=active&view=all">
         <h3>Active Campaigns</h3>
         <p><?= $totals['active'] ?></p>
     </a>
-    <a class="card stat-card stat-link" href="/ai-leadgen/campaigns/index.php?status=paused">
+    <a class="card stat-card stat-link" href="/ai-leadgen/campaigns/index.php?status=paused&view=all">
         <h3>Paused Campaigns</h3>
         <p><?= $totals['paused'] ?></p>
     </a>

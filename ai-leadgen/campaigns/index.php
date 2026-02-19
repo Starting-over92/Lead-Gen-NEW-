@@ -13,7 +13,8 @@ if (!in_array($statusFilter, $allowedStatus, true)) {
 }
 
 $page = max(1, (int)($_GET['page'] ?? 1));
-$perPage = 10;
+$showAll = (($_GET['view'] ?? '') === 'all');
+$perPage = $showAll ? 1000 : 10;
 $offset = ($page - 1) * $perPage;
 
 $where = [];
@@ -138,12 +139,14 @@ renderHeader('Campaigns', 'campaigns');
         </table>
     </div>
 
-    <div class="pagination">
-        <?php for ($i = 1; $i <= $totalPages; $i++): ?>
-            <a class="page-link <?= $i === $page ? 'active' : '' ?>" href="?<?= http_build_query(['search' => $search, 'status' => $statusFilter, 'page' => $i]) ?>">
-                <?= $i ?>
-            </a>
-        <?php endfor; ?>
-    </div>
+    <?php if (!$showAll): ?>
+        <div class="pagination">
+            <?php for ($i = 1; $i <= $totalPages; $i++): ?>
+                <a class="page-link <?= $i === $page ? 'active' : '' ?>" href="?<?= http_build_query(['search' => $search, 'status' => $statusFilter, 'page' => $i]) ?>">
+                    <?= $i ?>
+                </a>
+            <?php endfor; ?>
+        </div>
+    <?php endif; ?>
 </div>
 <?php renderFooter(); ?>
