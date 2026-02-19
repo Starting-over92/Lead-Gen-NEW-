@@ -42,14 +42,15 @@ if ($page > $totalPages) {
     $offset = ($page - 1) * $perPage;
 }
 
-$listSql = "SELECT * FROM campaigns {$whereSql} ORDER BY created_at DESC LIMIT :limit OFFSET :offset";
-$listStmt = $pdo->prepare($listSql);
-foreach ($params as $key => $value) {
-    $listStmt->bindValue($key, $value);
+if ($showAll) {
+    $listSql = "SELECT * FROM campaigns {$whereSql} ORDER BY created_at DESC";
+    $listStmt = $pdo->prepare($listSql);
+    $listStmt->execute($params);
+} else {
+    $listSql = sprintf('SELECT * FROM campaigns %s ORDER BY created_at DESC LIMIT %d OFFSET %d', $whereSql, $perPage, $offset);
+    $listStmt = $pdo->prepare($listSql);
+    $listStmt->execute($params);
 }
-$listStmt->bindValue(':limit', $perPage, PDO::PARAM_INT);
-$listStmt->bindValue(':offset', $offset, PDO::PARAM_INT);
-$listStmt->execute();
 $campaigns = $listStmt->fetchAll();
 
 renderHeader('Campaigns', 'campaigns');
@@ -69,6 +70,7 @@ renderHeader('Campaigns', 'campaigns');
 
 <div class="card">
     <form method="get" class="filters">
+        <?php if ($showAll): ?><input type="hidden" name="view" value="all"><?php endif; ?>
         <input type="text" name="search" placeholder="Search by niche or city" value="<?= e($search) ?>">
         <select name="status">
             <option value="">All statuses</option>
