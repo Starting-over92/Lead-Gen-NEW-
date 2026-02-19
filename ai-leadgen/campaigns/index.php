@@ -26,8 +26,8 @@ if ($search !== '') {
 }
 
 if ($statusFilter !== '') {
-    $where[] = 'status = :status';
-    $params[':status'] = $statusFilter;
+    $where[] = 'LOWER(TRIM(status)) = :status';
+    $params[':status'] = strtolower($statusFilter);
 }
 
 $whereSql = $where ? 'WHERE ' . implode(' AND ', $where) : '';
@@ -118,7 +118,8 @@ renderHeader('Campaigns', 'campaigns');
                         </td>
                         <td><?= e((string)$campaign['outreach_tone']) ?></td>
                         <td><?= e((string)$campaign['daily_limit']) ?></td>
-                        <td><span class="status <?= e((string)$campaign['status']) ?>"><?= e(ucfirst((string)$campaign['status'])) ?></span></td>
+                        <?php $normalizedStatus = strtolower(trim((string)$campaign['status'])); ?>
+                        <td><span class="status <?= e($normalizedStatus) ?>"><?= e(ucfirst($normalizedStatus)) ?></span></td>
                         <td><?= e((string)$campaign['created_at']) ?></td>
                         <td>
                             <div class="actions">
@@ -129,7 +130,7 @@ renderHeader('Campaigns', 'campaigns');
                                     <?= csrfField(); ?>
                                     <input type="hidden" name="id" value="<?= (int)$campaign['id'] ?>">
                                     <button type="submit" class="btn btn-mini">
-                                        <?= $campaign['status'] === 'active' ? 'Pause' : 'Activate' ?>
+                                        <?= strtolower(trim((string)$campaign['status'])) === 'active' ? 'Pause' : 'Activate' ?>
                                     </button>
                                 </form>
                             </div>

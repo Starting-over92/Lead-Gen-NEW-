@@ -7,9 +7,9 @@ require_once __DIR__ . '/../includes/layout.php';
 
 $totals = [
     'all' => (int)$pdo->query('SELECT COUNT(*) FROM campaigns')->fetchColumn(),
-    'active' => (int)$pdo->query("SELECT COUNT(*) FROM campaigns WHERE status = 'active'")->fetchColumn(),
-    'paused' => (int)$pdo->query("SELECT COUNT(*) FROM campaigns WHERE status = 'paused'")->fetchColumn(),
-    'daily_capacity' => (int)$pdo->query('SELECT COALESCE(SUM(daily_limit),0) FROM campaigns WHERE status = "active"')->fetchColumn(),
+    'active' => (int)$pdo->query("SELECT COUNT(*) FROM campaigns WHERE LOWER(TRIM(status)) = 'active'")->fetchColumn(),
+    'paused' => (int)$pdo->query("SELECT COUNT(*) FROM campaigns WHERE LOWER(TRIM(status)) = 'paused'")->fetchColumn(),
+    'daily_capacity' => (int)$pdo->query('SELECT COALESCE(SUM(daily_limit),0) FROM campaigns WHERE LOWER(TRIM(status)) = "active"')->fetchColumn(),
 ];
 
 renderHeader('Dashboard', 'dashboard');
