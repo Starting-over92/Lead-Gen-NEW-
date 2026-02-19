@@ -9,9 +9,9 @@ declare(strict_types=1);
  * 2) Fallback defaults below
  */
 $host = getenv('DB_HOST') ?: 'localhost';
-$dbName = getenv('DB_NAME') ?: 'ai_leadgen';
-$username = getenv('DB_USER') ?: 'root';
-$password = getenv('DB_PASS') ?: '';
+$dbName = getenv('DB_NAME') ?: 'u419638158_Pooky';
+$username = getenv('DB_USER') ?: 'u419638158_Pooky01';
+$password = getenv('DB_PASS') ?: 'Primaldevs01@@';
 $port = (int)(getenv('DB_PORT') ?: 3306);
 $charset = 'utf8mb4';
 
