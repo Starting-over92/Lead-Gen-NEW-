@@ -21,7 +21,7 @@ if (!$id) {
     exit;
 }
 
-$stmt = $pdo->prepare("UPDATE campaigns SET status = CASE WHEN status = 'active' THEN 'paused' ELSE 'active' END WHERE id = :id");
+$stmt = $pdo->prepare("UPDATE campaigns SET status = CASE WHEN LOWER(TRIM(status)) = 'active' THEN 'paused' ELSE 'active' END WHERE id = :id");
 $stmt->execute([':id' => $id]);
 
 header('Location: /ai-leadgen/campaigns/index.php');
