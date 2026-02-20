@@ -12,10 +12,6 @@ if (!in_array($statusFilter, $allowedStatus, true)) {
     $statusFilter = '';
 }
 
-$page = max(1, (int)($_GET['page'] ?? 1));
-$perPage = 10;
-$offset = ($page - 1) * $perPage;
-
 $where = [];
 $params = [];
 
@@ -25,30 +21,17 @@ if ($search !== '') {
 }
 
 if ($statusFilter !== '') {
-    $where[] = 'status = :status';
-    $params[':status'] = $statusFilter;
+    $where[] = 'LOWER(TRIM(status)) = :status';
+    $params[':status'] = strtolower($statusFilter);
 }
 
 $whereSql = $where ? 'WHERE ' . implode(' AND ', $where) : '';
 
-$countStmt = $pdo->prepare("SELECT COUNT(*) FROM campaigns {$whereSql}");
-$countStmt->execute($params);
-$totalRows = (int)$countStmt->fetchColumn();
-$totalPages = max(1, (int)ceil($totalRows / $perPage));
-
-if ($page > $totalPages) {
-    $page = $totalPages;
-    $offset = ($page - 1) * $perPage;
-}
-
-$listSql = "SELECT * FROM campaigns {$whereSql} ORDER BY created_at DESC LIMIT :limit OFFSET :offset";
+// Index acts as campaign archive: fetch all matching campaigns.
+// Use an explicit high LIMIT so session-level sql_select_limit cannot truncate results.
+$listSql = "SELECT * FROM campaigns {$whereSql} ORDER BY id DESC LIMIT 5000";
 $listStmt = $pdo->prepare($listSql);
-foreach ($params as $key => $value) {
-    $listStmt->bindValue($key, $value);
-}
-$listStmt->bindValue(':limit', $perPage, PDO::PARAM_INT);
-$listStmt->bindValue(':offset', $offset, PDO::PARAM_INT);
-$listStmt->execute();
+$listStmt->execute($params);
 $campaigns = $listStmt->fetchAll();
 
 renderHeader('Campaigns', 'campaigns');
@@ -115,7 +98,8 @@ renderHeader('Campaigns', 'campaigns');
                         </td>
                         <td><?= e((string)$campaign['outreach_tone']) ?></td>
                         <td><?= e((string)$campaign['daily_limit']) ?></td>
-                        <td><span class="status <?= e((string)$campaign['status']) ?>"><?= e(ucfirst((string)$campaign['status'])) ?></span></td>
+                        <?php $normalizedStatus = strtolower(trim((string)$campaign['status'])); ?>
+                        <td><span class="status <?= e($normalizedStatus) ?>"><?= e(ucfirst($normalizedStatus)) ?></span></td>
                         <td><?= e((string)$campaign['created_at']) ?></td>
                         <td>
                             <div class="actions">
@@ -126,7 +110,7 @@ renderHeader('Campaigns', 'campaigns');
                                     <?= csrfField(); ?>
                                     <input type="hidden" name="id" value="<?= (int)$campaign['id'] ?>">
                                     <button type="submit" class="btn btn-mini">
-                                        <?= $campaign['status'] === 'active' ? 'Pause' : 'Activate' ?>
+                                        <?= strtolower(trim((string)$campaign['status'])) === 'active' ? 'Pause' : 'Activate' ?>
                                     </button>
                                 </form>
                             </div>
@@ -136,14 +120,6 @@ renderHeader('Campaigns', 'campaigns');
             <?php endif; ?>
             </tbody>
         </table>
-    </div>
-
-    <div class="pagination">
-        <?php for ($i = 1; $i <= $totalPages; $i++): ?>
-            <a class="page-link <?= $i === $page ? 'active' : '' ?>" href="?<?= http_build_query(['search' => $search, 'status' => $statusFilter, 'page' => $i]) ?>">
-                <?= $i ?>
-            </a>
-        <?php endfor; ?>
     </div>
 </div>
 <?php renderFooter(); ?>

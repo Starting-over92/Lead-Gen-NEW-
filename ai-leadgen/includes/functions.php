@@ -122,6 +122,8 @@ function createCampaign(PDO $pdo, array $values): int
     $pdo->beginTransaction();
 
     try {
+        $beforeCount = (int)$pdo->query('SELECT COUNT(*) FROM campaigns')->fetchColumn();
+
         $stmt = $pdo->prepare('INSERT INTO campaigns (niche, country, city, company_size, job_titles, outreach_tone, daily_limit, status) VALUES (:niche, :country, :city, :company_size, :job_titles, :outreach_tone, :daily_limit, :status)');
         $stmt->execute([
             ':niche' => $values['niche'],
@@ -145,6 +147,11 @@ function createCampaign(PDO $pdo, array $values): int
 
         if (!$verifyStmt->fetchColumn()) {
             throw new RuntimeException('Campaign could not be verified after insert.');
+        }
+
+        $afterCount = (int)$pdo->query('SELECT COUNT(*) FROM campaigns')->fetchColumn();
+        if ($afterCount < ($beforeCount + 1)) {
+            throw new RuntimeException('Campaign insert did not preserve existing records.');
         }
 
         $pdo->commit();
