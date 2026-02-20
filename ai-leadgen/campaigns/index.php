@@ -50,6 +50,7 @@ renderHeader('Campaigns', 'campaigns');
 
 <div class="card">
     <form method="get" class="filters">
+        <?php if ($showAll): ?><input type="hidden" name="view" value="all"><?php endif; ?>
         <input type="text" name="search" placeholder="Search by niche or city" value="<?= e($search) ?>">
         <select name="status">
             <option value="">All statuses</option>
