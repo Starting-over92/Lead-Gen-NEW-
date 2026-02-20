@@ -45,7 +45,8 @@ renderHeader('Campaign Details', 'campaigns');
         <p><strong>Company Size:</strong> <?= e((string)$campaign['company_size']) ?></p>
         <p><strong>Outreach Tone:</strong> <?= e((string)$campaign['outreach_tone']) ?> (<?= e(toneDescription((string)$campaign['outreach_tone'])) ?>)</p>
         <p><strong>Daily Limit:</strong> <?= e((string)$campaign['daily_limit']) ?> emails/day</p>
-        <p><strong>Status:</strong> <span class="status <?= e((string)$campaign['status']) ?>"><?= e(ucfirst((string)$campaign['status'])) ?></span></p>
+        <?php $normalizedStatus = strtolower(trim((string)$campaign['status'])); ?>
+        <p><strong>Status:</strong> <span class="status <?= e($normalizedStatus) ?>"><?= e(ucfirst($normalizedStatus)) ?></span></p>
     </div>
 
     <div class="card">
