@@ -28,7 +28,8 @@ if ($statusFilter !== '') {
 $whereSql = $where ? 'WHERE ' . implode(' AND ', $where) : '';
 
 // Index acts as campaign archive: fetch all matching campaigns.
-$listSql = "SELECT * FROM campaigns {$whereSql} ORDER BY id DESC";
+// Use an explicit high LIMIT so session-level sql_select_limit cannot truncate results.
+$listSql = "SELECT * FROM campaigns {$whereSql} ORDER BY id DESC LIMIT 5000";
 $listStmt = $pdo->prepare($listSql);
 $listStmt->execute($params);
 $campaigns = $listStmt->fetchAll();

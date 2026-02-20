@@ -102,3 +102,6 @@ if (!$pdo) {
 
 // Optional ping-style query to fail fast if connection is stale.
 $pdo->query('SELECT 1');
+
+// Ensure no session-level row cap truncates list pages on some shared-host MySQL configs.
+$pdo->exec('SET SESSION sql_select_limit=18446744073709551615');
