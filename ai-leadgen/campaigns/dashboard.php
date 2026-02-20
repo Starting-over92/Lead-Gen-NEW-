@@ -7,9 +7,9 @@ require_once __DIR__ . '/../includes/layout.php';
 
 $totals = [
     'all' => (int)$pdo->query('SELECT COUNT(*) FROM campaigns')->fetchColumn(),
-    'active' => (int)$pdo->query("SELECT COUNT(*) FROM campaigns WHERE status = 'active'")->fetchColumn(),
-    'paused' => (int)$pdo->query("SELECT COUNT(*) FROM campaigns WHERE status = 'paused'")->fetchColumn(),
-    'daily_capacity' => (int)$pdo->query('SELECT COALESCE(SUM(daily_limit),0) FROM campaigns WHERE status = "active"')->fetchColumn(),
+    'active' => (int)$pdo->query("SELECT COUNT(*) FROM campaigns WHERE LOWER(TRIM(status)) = 'active'")->fetchColumn(),
+    'paused' => (int)$pdo->query("SELECT COUNT(*) FROM campaigns WHERE LOWER(TRIM(status)) = 'paused'")->fetchColumn(),
+    'daily_capacity' => (int)$pdo->query('SELECT COALESCE(SUM(daily_limit),0) FROM campaigns WHERE LOWER(TRIM(status)) = "active"')->fetchColumn(),
 ];
 
 renderHeader('Dashboard', 'dashboard');
@@ -20,9 +20,18 @@ renderHeader('Dashboard', 'dashboard');
 </section>
 
 <div class="stat-grid">
-    <div class="card stat-card"><h3>Total Campaigns</h3><p><?= $totals['all'] ?></p></div>
-    <div class="card stat-card"><h3>Active Campaigns</h3><p><?= $totals['active'] ?></p></div>
-    <div class="card stat-card"><h3>Paused Campaigns</h3><p><?= $totals['paused'] ?></p></div>
+    <a class="card stat-card stat-link" href="/ai-leadgen/campaigns/index.php?view=all">
+        <h3>Total Campaigns</h3>
+        <p><?= $totals['all'] ?></p>
+    </a>
+    <a class="card stat-card stat-link" href="/ai-leadgen/campaigns/index.php?status=active&view=all">
+        <h3>Active Campaigns</h3>
+        <p><?= $totals['active'] ?></p>
+    </a>
+    <a class="card stat-card stat-link" href="/ai-leadgen/campaigns/index.php?status=paused&view=all">
+        <h3>Paused Campaigns</h3>
+        <p><?= $totals['paused'] ?></p>
+    </a>
     <div class="card stat-card"><h3>Daily Active Capacity</h3><p><?= $totals['daily_capacity'] ?></p></div>
 </div>
 <?php renderFooter(); ?>
