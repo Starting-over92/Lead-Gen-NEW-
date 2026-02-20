@@ -12,11 +12,6 @@ if (!in_array($statusFilter, $allowedStatus, true)) {
     $statusFilter = '';
 }
 
-$page = max(1, (int)($_GET['page'] ?? 1));
-$showAll = (($_GET['view'] ?? '') === 'all');
-$perPage = $showAll ? 1000 : 10;
-$offset = ($page - 1) * $perPage;
-
 $where = [];
 $params = [];
 
@@ -32,25 +27,10 @@ if ($statusFilter !== '') {
 
 $whereSql = $where ? 'WHERE ' . implode(' AND ', $where) : '';
 
-$countStmt = $pdo->prepare("SELECT COUNT(*) FROM campaigns {$whereSql}");
-$countStmt->execute($params);
-$totalRows = (int)$countStmt->fetchColumn();
-$totalPages = max(1, (int)ceil($totalRows / $perPage));
-
-if ($page > $totalPages) {
-    $page = $totalPages;
-    $offset = ($page - 1) * $perPage;
-}
-
-if ($showAll) {
-    $listSql = "SELECT * FROM campaigns {$whereSql} ORDER BY created_at DESC";
-    $listStmt = $pdo->prepare($listSql);
-    $listStmt->execute($params);
-} else {
-    $listSql = sprintf('SELECT * FROM campaigns %s ORDER BY created_at DESC LIMIT %d OFFSET %d', $whereSql, $perPage, $offset);
-    $listStmt = $pdo->prepare($listSql);
-    $listStmt->execute($params);
-}
+// Index acts as campaign archive: fetch all matching campaigns.
+$listSql = "SELECT * FROM campaigns {$whereSql} ORDER BY id DESC";
+$listStmt = $pdo->prepare($listSql);
+$listStmt->execute($params);
 $campaigns = $listStmt->fetchAll();
 
 renderHeader('Campaigns', 'campaigns');
@@ -141,15 +121,5 @@ renderHeader('Campaigns', 'campaigns');
             </tbody>
         </table>
     </div>
-
-    <?php if (!$showAll): ?>
-        <div class="pagination">
-            <?php for ($i = 1; $i <= $totalPages; $i++): ?>
-                <a class="page-link <?= $i === $page ? 'active' : '' ?>" href="?<?= http_build_query(['search' => $search, 'status' => $statusFilter, 'page' => $i]) ?>">
-                    <?= $i ?>
-                </a>
-            <?php endfor; ?>
-        </div>
-    <?php endif; ?>
 </div>
 <?php renderFooter(); ?>
